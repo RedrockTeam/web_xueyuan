@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>WEB开发部学员管理系统</title>
+    <!-- 新 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <style>
+        .main {
+            width: 960px;
+            margin: 0 auto;
+        }
+    </style>
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="//cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="//cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+
+<div class="container-fluid main">
+    <%- include('nav.html') %>
+    <div class="row">
+        <table class="table table-bordered table-hover col-xs-12">
+            <tr>
+                <th>id</th>
+                <th>type</th>
+                <th>姓名</th>
+                <th>电话</th>
+                <th>学号</th>
+                <th>QQ</th>
+                <th>分数</th>
+                <th>isFired</th>
+                <th>操作</th>
+            </tr>
+            <% list.forEach(function (stu) { %>
+            <tr>
+                <td><%= stu.id %></td>
+                <td><%= stu.type %></td>
+                <td><%= stu.realname %></td>
+                <td><%= stu.tel %></td>
+                <td><%= stu.xh %></td>
+                <td><%= stu.qq %></td>
+                <td><%= stu.score %></td>
+                <td><%= stu.status == 'on' ? "正常" : "踢了" %></td>
+                <td>
+                    <button class="btn btn-info J_Modify" data-src="/home/stu/modify"
+                            data-id="<%= stu.id %>"
+                            data-realname="<%= stu.realname %>"
+                            data-tel="<%= stu.tel %>"
+                            data-xh="<%= stu.xh %>"
+                            data-qq="<%= stu.qq %>"
+                            >改信息</button>
+                    <button class="btn btn-danger J_Fire" data-src="/home/stu/fire" data-id="<%= stu.id %>">恢复</button>
+                </td>
+            </tr>
+            <% }) %>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modifyModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">改信息</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group">
+                        <label for="nameInput">姓名</label>
+                        <input type="text" class="form-control" id="nameInput" placeholder="name">
+                    </div>
+                    <div class="form-group">
+                        <label for="phoneInput">电话</label>
+                        <input type="text" class="form-control" id="phoneInput" placeholder="phone">
+                    </div>
+                    <div class="form-group">
+                        <label for="xhInput">学号</label>
+                        <input type="text" class="form-control" id="xhInput" placeholder="xh">
+                    </div>
+                    <div class="form-group">
+                        <label for="qqInput">QQ</label>
+                        <input type="text" class="form-control" id="qqInput" placeholder="qq">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关掉</button>
+                <button type="button" class="btn btn-primary" id="modalSave">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="//cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>
+<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+<script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<script>
+    $(document)
+            .on('click', '.J_Modify', function () {
+                var $self = $(this);
+                $('#modifyModal')
+                        .attr('data-id', $self.attr('data-id'))
+                        .attr('data-action', 'modify')
+                        .attr('data-realname', $self.attr('data-realname'))
+                        .attr('data-tel', $self.attr('data-tel'))
+                        .attr('data-xh', $self.attr('data-xh'))
+                        .attr('data-qq', $self.attr('data-qq'))
+                        .modal('show');
+                $('#nameInput').val($self.attr('data-realname'));
+                $('#phoneInput').val($self.attr('data-tel'));
+                $('#xhInput').val($self.attr('data-xh'));
+                $('#qqInput').val($self.attr('data-qq'));
+            })
+            .on('click', '.J_Fire', function () {
+                var id = $(this).attr('data-id');
+                $.ajax({
+                    url: "/home/stu/restore",
+                    type: 'POST',
+                    data: {
+                        fireId: id
+                    },
+                    success: function (res) {
+                        if (res && res.errno == 0) {
+                            alert('ok');
+                            location.reload();//优化
+                        } else {
+                            alert('not ok');
+                        }
+                    }
+                })
+            })
+            .on('click', '#modalSave', function () {
+                var $m = $('#modifyModal');
+                var action = $m.attr('data-action'),
+                        id = $m.attr('data-id'),
+                        realname = $('#nameInput').val(),
+                        tel = $('#phoneInput').val(),
+                        xh = $('#xhInput').val(),
+                        qq = $('#qqInput').val();
+
+                if (action == 'modify') {
+                    $.ajax({
+                        url: "/home/stu/modify",
+                        type: 'POST',
+                        data: {
+                            id: id,
+                            realname: realname,
+                            tel: tel,
+                            xh: xh,
+                            qq: qq
+                        },
+                        success: function (res) {
+                            if (res && res.errno == 0) {
+                                alert('ok');
+                                location.reload();//todo 优化
+                            } else {
+                                alert('not ok');
+                            }
+                            $('#modifyModal').modal('hide');
+                        }
+                    })
+                }
+            })
+</script>
+</body>
+</html>
