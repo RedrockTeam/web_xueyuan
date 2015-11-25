@@ -41,8 +41,6 @@ export default class extends Base {
       activity_id: insertId,
       ts: +new Date()
     });
-
     return this.success('success');
-
   }
 }

@@ -54,4 +54,31 @@ export default class extends Base {
       return this.fail('fail');
     }
   }
+
+  async ajaxAction() {
+    let typeDict = {
+      fe: '前端',
+      be: '后端'
+    };
+    let type = this.get('type'), data;
+    let scoreCollection = await this.model('score').select();
+
+    if (type == 'fe' || type == 'be') {
+      data = await this.model('xueyuan').where({type: typeDict[type], status: 'on'}).select();
+      data.map(d => {
+        d.score = 0;
+        for (let _store of scoreCollection) {
+          if (_store.xueyuan_id == d.id) {
+            d.score += _store.score;
+          }
+        }
+        return d;
+      });
+    } else if (type == 'fired') {
+      data = await this.model('xueyuan').where({status: 'off'}).select();
+    } else {
+      return this.fail("type not allowed");
+    }
+    return this.success(data);
+  }
 }
